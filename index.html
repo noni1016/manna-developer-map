@@ -36,26 +36,28 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 24px;
+      padding: 10px 16px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       z-index: 100;
       flex-shrink: 0;
+      gap: 8px;
     }
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .logo-dot {
-      width: 10px;
-      height: 10px;
+      width: 10px; height: 10px;
       border-radius: 50%;
       background: var(--accent);
       box-shadow: 0 0 8px var(--accent);
       animation: pulse 2s ease infinite;
+      flex-shrink: 0;
     }
 
     @keyframes pulse {
@@ -64,52 +66,80 @@
     }
 
     .header h1 {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       letter-spacing: -0.3px;
+      line-height: 1.3;
+      white-space: nowrap;
     }
 
-    .header h1 span {
-      color: var(--accent);
-    }
+    .header h1 span { color: var(--accent); }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .count-badge {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 100px;
-      padding: 4px 12px;
+      padding: 4px 10px;
       font-family: 'Space Mono', monospace;
       font-size: 11px;
       color: var(--text-muted);
+      white-space: nowrap;
     }
 
-    .count-badge span {
-      color: var(--green);
-      font-weight: 700;
+    .count-badge span { color: var(--green); font-weight: 700; }
+
+    .nav-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12px; font-weight: 500;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
     }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-btn .icon-only { display: none; }
+    .nav-btn .text-label { display: inline; }
 
     .btn-register {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       border: none;
       color: white;
       font-family: 'Noto Sans KR', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 7px 16px;
+      font-size: 12px; font-weight: 700;
+      padding: 7px 14px;
       border-radius: 8px;
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
       transition: opacity 0.2s;
+      white-space: nowrap;
     }
-
     .btn-register:hover { opacity: 0.85; }
+
+    /* 모바일: 아이콘만 표시 */
+    br.mobile-br { display: none; }
+    @media (max-width: 480px) {
+      .header { padding: 10px 12px; }
+      br.mobile-br { display: block; }
+      .nav-btn { padding: 7px 10px; }
+      .nav-btn .icon-only { display: inline; }
+      .nav-btn .text-label { display: none; }
+      .btn-register .text-label { display: none; }
+      .btn-register .icon-only { display: inline; }
+      .count-badge .count-label { display: none; }
+    }
 
     /* Map container */
     #map {
@@ -344,12 +374,18 @@
 <div class="header">
   <div class="header-left">
     <div class="logo-dot"></div>
-    <h1>만나교회 <span>개발자 지도</span></h1>
+    <h1>만나교회<br class="mobile-br"><span>개발자 지도</span></h1>
   </div>
   <div class="header-right">
-    <div class="count-badge">개발자 <span id="devCount">0</span>명</div>
-    <a href="list.html" class="nav-btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:all 0.2s;">📋 목록 보기</a>
-    <a href="survey.html" class="btn-register">+ 등록하기</a>
+    <div class="count-badge"><span class="count-label">개발자 </span><span id="devCount">0</span><span class="count-label">명</span></div>
+    <a href="list.html" class="nav-btn">
+      <span class="icon-only">📋</span>
+      <span class="text-label">📋 목록 보기</span>
+    </a>
+    <a href="survey.html" class="btn-register">
+      <span class="icon-only">＋</span>
+      <span class="text-label">+ 등록하기</span>
+    </a>
   </div>
 </div>
 
