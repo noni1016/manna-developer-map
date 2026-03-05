@@ -269,7 +269,6 @@
 
 <script>
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwotkKwTMoxUkKWNgg6mVRnQrb2tXRMS_qFAcoBjcMCaMmPPO6KvdmxgffH72UaIZitFg/exec';
-  const ADMIN_PW = '7009';
 
   let allDevelopers = [];
   let currentSort = 'name';
@@ -488,18 +487,34 @@
     document.getElementById('adminModal').classList.remove('show');
   }
 
-  function confirmAdmin() {
+  async function confirmAdmin() {
     const pw = document.getElementById('adminPwInput').value;
-    if (pw === ADMIN_PW) {
-      isAdminUnlocked = true;
-      document.getElementById('adminBtn').textContent = '🔓 관리자';
-      document.getElementById('adminBtn').classList.add('unlocked');
-      closeAdminModal();
-      applyFilters();
-    } else {
-      document.getElementById('adminError').style.display = 'block';
-      document.getElementById('adminPwInput').value = '';
-      document.getElementById('adminPwInput').focus();
+    const confirmBtn = document.querySelector('.modal-confirm');
+    confirmBtn.textContent = '확인 중...';
+    confirmBtn.disabled = true;
+
+    try {
+      const res = await fetch(
+        `${APPS_SCRIPT_URL}?action=verifyPassword&password=${encodeURIComponent(pw)}`,
+        { redirect: 'follow' }
+      );
+      const result = await res.json();
+      if (result.valid) {
+        isAdminUnlocked = true;
+        document.getElementById('adminBtn').textContent = '🔓 관리자';
+        document.getElementById('adminBtn').classList.add('unlocked');
+        closeAdminModal();
+        applyFilters();
+      } else {
+        document.getElementById('adminError').style.display = 'block';
+        document.getElementById('adminPwInput').value = '';
+        document.getElementById('adminPwInput').focus();
+      }
+    } catch(e) {
+      alert('서버 오류가 발생했어요. 다시 시도해주세요.');
+    } finally {
+      confirmBtn.textContent = '확인';
+      confirmBtn.disabled = false;
     }
   }
 
