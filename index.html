@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>만나교회 개발자 지도</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161b27;
+      --surface2: #1e2535;
+      --accent: #4f9eff;
+      --accent2: #7c5cfc;
+      --green: #34d399;
+      --text: #e8eaf0;
+      --text-muted: #7a8499;
+      --border: #2a3347;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header h1 span {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .count-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .count-badge span {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .btn-register {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      color: white;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.2s;
+    }
+
+    .btn-register:hover { opacity: 0.85; }
+
+    /* Map container */
+    #map {
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 16px;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading p {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Custom marker styles */
+    .custom-marker {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .marker-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      overflow: hidden;
+      background: var(--surface2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(79,158,255,0.2);
+      transition: transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .marker-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .marker-avatar .initials {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .marker-label {
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* Popup */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .popup-overlay.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .popup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      width: 320px;
+      max-width: 90vw;
+      position: relative;
+      animation: slideUp 0.3s ease;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .popup-close:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .popup-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      overflow: hidden;
+      background: var(--surface2);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 4px rgba(79,158,255,0.15);
+    }
+
+    .popup-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .popup-avatar .initials {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .popup-name {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .popup-job {
+      text-align: center;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .popup-intro {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      white-space: pre-wrap;
+    }
+    .popup-prayer {
+      padding: 12px 0 0;
+      border-top: 1px solid var(--border);
+    }
+    .popup-prayer-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: #7c5cfc;
+      margin-bottom: 6px;
+    }
+    .popup-prayer-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="loading-spinner"></div>
+  <p>개발자들을 불러오는 중...</p>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-dot"></div>
+    <h1>만나교회 <span>개발자 지도</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="count-badge">개발자 <span id="devCount">0</span>명</div>
+    <a href="list.html" class="nav-btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;text-decoration:none;transition:all 0.2s;">📋 목록 보기</a>
+    <a href="survey.html" class="btn-register">+ 등록하기</a>
+  </div>
+</div>
+
+<!-- Map -->
+<div id="map"></div>
+
+<!-- Popup -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup(event)">
+  <div class="popup-card">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <div class="popup-avatar" id="popupAvatar"></div>
+    <div class="popup-name" id="popupName"></div>
+    <div class="popup-job" id="popupJob"></div>
+    <div class="popup-intro" id="popupIntro"></div>
+    <div class="popup-prayer" id="popupPrayerWrap" style="display:none;">
+      <div class="popup-prayer-label">🙏 기도제목</div>
+      <div class="popup-prayer-text" id="popupPrayer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Kakao Maps SDK -->
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=936980af8dd332fb61df2adcdaaf611d"></script>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwotkKwTMoxUkKWNgg6mVRnQrb2tXRMS_qFAcoBjcMCaMmPPO6KvdmxgffH72UaIZitFg/exec';
+
+  let map;
+
+  function getInitials(name) {
+    return name ? name.charAt(0) : '?';
+  }
+
+  function createMarkerContent(dev) {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:relative;cursor:pointer;';
+
+    const avatar = document.createElement('div');
+    avatar.style.cssText = `
+      width:48px;height:48px;border-radius:50%;
+      border:3px solid #4f9eff;overflow:hidden;
+      background:#1e2535;
+      box-shadow:0 4px 12px rgba(0,0,0,0.4),0 0 0 2px rgba(79,158,255,0.2);
+      display:flex;align-items:center;justify-content:center;
+      transition:transform 0.2s;
+    `;
+
+    if (dev.photoUrl) {
+      const img = document.createElement('img');
+      img.src = dev.photoUrl;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      img.onerror = () => {
+        img.remove();
+        avatar.innerHTML = `<span style="font-size:16px;font-weight:700;color:#4f9eff;">${getInitials(dev.name)}</span>`;
+      };
+      avatar.appendChild(img);
+    } else {
+      avatar.innerHTML = `<span style="font-size:16px;font-weight:700;color:#4f9eff;">${getInitials(dev.name)}</span>`;
+    }
+
+    const label = document.createElement('div');
+    label.style.cssText = `
+      position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+      background:#161b27;border:1px solid #2a3347;border-radius:100px;
+      padding:2px 8px;font-size:11px;font-weight:500;
+      white-space:nowrap;color:#e8eaf0;
+      box-shadow:0 2px 8px rgba(0,0,0,0.3);
+      font-family:'Noto Sans KR',sans-serif;
+    `;
+    label.textContent = dev.name;
+
+    div.appendChild(avatar);
+    div.appendChild(label);
+
+    div.addEventListener('mouseover', () => {
+      avatar.style.transform = 'scale(1.12)';
+    });
+    div.addEventListener('mouseout', () => {
+      avatar.style.transform = 'scale(1)';
+    });
+
+    return div;
+  }
+
+  function openPopup(dev) {
+    const avatarEl = document.getElementById('popupAvatar');
+    if (dev.photoUrl) {
+      avatarEl.innerHTML = `<img src="${dev.photoUrl}" onerror="this.parentElement.innerHTML='<span class=\\'initials\\'>${getInitials(dev.name)}</span>'" alt="${dev.name}">`;
+    } else {
+      avatarEl.innerHTML = `<span class="initials">${getInitials(dev.name)}</span>`;
+    }
+
+    document.getElementById('popupName').textContent = dev.name;
+    document.getElementById('popupJob').textContent = dev.job || '';
+    document.getElementById('popupIntro').textContent = dev.intro || '소개가 없어요.';
+
+    const prayerWrap = document.getElementById('popupPrayerWrap');
+    const prayerEl = document.getElementById('popupPrayer');
+    if (dev.prayer) {
+      prayerEl.textContent = dev.prayer;
+      prayerWrap.style.display = 'block';
+    } else {
+      prayerWrap.style.display = 'none';
+    }
+
+    document.getElementById('popupOverlay').classList.add('show');
+  }
+
+  function closePopup(e) {
+    if (!e || e.target === document.getElementById('popupOverlay') || e.currentTarget.classList.contains('popup-close')) {
+      document.getElementById('popupOverlay').classList.remove('show');
+    }
+  }
+
+  async function loadDevelopers() {
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), {
+        redirect: 'follow'
+      });
+      const developers = await res.json();
+      return developers.filter(d => d.lat && d.lng);
+    } catch (e) {
+      console.error('데이터 로드 실패:', e);
+      return [];
+    }
+  }
+
+  // 줌 레벨 → 위경도 1단위당 픽셀 수 (위도 37 기준, 카카오 실측 근사)
+  function latPerPixel(zoomLevel) {
+    const base = 0.0000021; // level1 기준
+    return base * Math.pow(2, zoomLevel - 1);
+  }
+
+  // 겹친 마커들을 그룹핑해서 원형 배치
+  function spreadOverlappingMarkers(developers, zoomLevel) {
+    const lpp = latPerPixel(zoomLevel);
+    // 마커 실제 크기 48px + 여유 4px = 52px
+    const MARKER_PX = 52;
+    const markerLat = lpp * MARKER_PX;
+    const markerLng = markerLat / Math.cos(37.5 * Math.PI / 180);
+
+    // 겹침 판단: 마커 크기 이내면 겹침
+    const thresholdLat = markerLat;
+    // spreadLat/Lng 는 아래 배치 계산에서 사용
+    const spreadLat = markerLat;
+    const spreadLng = markerLng;
+
+    const result = developers.map(d => ({
+      ...d,
+      _dispLat: parseFloat(d.lat),
+      _dispLng: parseFloat(d.lng)
+    }));
+
+    const n = result.length;
+    const inGroup = new Array(n).fill(-1); // 그룹 번호
+    const groups = [];
+
+    // 1단계: 원본 좌표 기준으로 그룹 형성
+    for (let i = 0; i < n; i++) {
+      if (inGroup[i] !== -1) continue;
+      const g = [i];
+      inGroup[i] = groups.length;
+      for (let j = i + 1; j < n; j++) {
+        if (inGroup[j] !== -1) continue;
+        const dlat = parseFloat(developers[i].lat) - parseFloat(developers[j].lat);
+        const dlng = parseFloat(developers[i].lng) - parseFloat(developers[j].lng);
+        if (Math.abs(dlat) < thresholdLat && Math.abs(dlng) < thresholdLat / Math.cos(37.5 * Math.PI / 180)) {
+          g.push(j);
+          inGroup[j] = groups.length;
+        }
+      }
+      groups.push(g);
+    }
+
+    // 2단계: 그룹별 원형 배치
+    groups.forEach(g => {
+      if (g.length === 1) return;
+
+      const centerLat = g.reduce((s, idx) => s + parseFloat(developers[idx].lat), 0) / g.length;
+      const centerLng = g.reduce((s, idx) => s + parseFloat(developers[idx].lng), 0) / g.length;
+
+      // 마커가 딱 붙도록 원형 배치
+      // 원주 = n × 마커크기 → r = (n × 마커크기) / (2π)
+      // 2개면 r = 마커크기 / 2 (중심에서 절반씩 이동, 붙음)
+      const r    = g.length === 2
+        ? spreadLat / 2
+        : (g.length * spreadLat) / (2 * Math.PI);
+      const rLng = g.length === 2
+        ? spreadLng / 2
+        : (g.length * spreadLng) / (2 * Math.PI);
+
+      g.forEach((idx, k) => {
+        const angle = (2 * Math.PI * k) / g.length - Math.PI / 2;
+        result[idx]._dispLat = centerLat + r * Math.cos(angle);
+        result[idx]._dispLng = centerLng + rLng * Math.sin(angle);
+      });
+    });
+
+    return result;
+  }
+
+  let allDevelopers = [];
+  let overlays = [];
+
+  function redrawMarkers() {
+    const zoomLevel = map.getLevel();
+    overlays.forEach(o => o.setMap(null));
+    overlays = [];
+
+    const spread = spreadOverlappingMarkers(allDevelopers, zoomLevel);
+
+    spread.forEach(dev => {
+      if (!dev.lat || !dev.lng) return;
+      const position = new kakao.maps.LatLng(dev._dispLat, dev._dispLng);
+      const content = createMarkerContent(dev);
+      const overlay = new kakao.maps.CustomOverlay({
+        position,
+        content,
+        yAnchor: 1.6,
+        zIndex: 1
+      });
+      overlay.setMap(map);
+      overlays.push(overlay);
+
+      // hover 시 zIndex 올려서 앞에 표시
+      content.addEventListener('mouseover', () => {
+        overlay.setZIndex(999);
+      });
+      content.addEventListener('mouseout', () => {
+        overlay.setZIndex(1);
+      });
+
+      content.addEventListener('click', () => openPopup(dev));
+    });
+  }
+
+  async function initMap() {
+    const container = document.getElementById('map');
+    map = new kakao.maps.Map(container, {
+      center: new kakao.maps.LatLng(37.4979, 127.0276),
+      level: 8
+    });
+
+    const zoomControl = new kakao.maps.ZoomControl();
+    map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+    allDevelopers = await loadDevelopers();
+    document.getElementById('devCount').textContent = allDevelopers.length;
+
+    redrawMarkers();
+
+    // 줌 변경 시 핀 재배치
+    kakao.maps.event.addListener(map, 'zoom_changed', redrawMarkers);
+
+    const loading = document.getElementById('loading');
+    loading.classList.add('hide');
+    setTimeout(() => loading.style.display = 'none', 500);
+  }
+
+  window.addEventListener('load', initMap);
+</script>
+
+</body>
+</html>

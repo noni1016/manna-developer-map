@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>만나교회 개발자 목록</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161b27; --surface2: #1e2535;
+      --accent: #4f9eff; --accent2: #7c5cfc; --green: #34d399;
+      --yellow: #fbbf24; --text: #e8eaf0; --text-muted: #7a8499; --border: #2a3347;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(79,158,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(79,158,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none; z-index: 0;
+    }
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: var(--surface);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo-dot { width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.6;transform:scale(0.85);} }
+    .header h1 { font-size: 15px; font-weight: 700; }
+    .header h1 span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .nav-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text-muted); font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12px; font-weight: 500; padding: 7px 14px;
+      border-radius: 8px; cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-btn.active { background: linear-gradient(135deg,rgba(79,158,255,0.15),rgba(124,92,252,0.15)); border-color: var(--accent); color: var(--accent); }
+    .btn-register {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; color: white; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12px; font-weight: 700; padding: 7px 16px;
+      border-radius: 8px; cursor: pointer; text-decoration: none; transition: opacity 0.2s;
+    }
+    .btn-register:hover { opacity: 0.85; }
+    .content { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; position: relative; z-index: 1; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+    .search-box {
+      flex: 1; min-width: 200px; display: flex; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0 16px; gap: 8px; transition: border-color 0.2s;
+    }
+    .search-box:focus-within { border-color: var(--accent); }
+    .search-box input {
+      flex: 1; border: none; background: transparent; color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif; font-size: 14px; padding: 12px 0; outline: none;
+    }
+    .search-box .icon { color: var(--text-muted); font-size: 16px; }
+
+    /* Sort buttons */
+    .sort-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sort-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-muted); font-family: 'Noto Sans KR', sans-serif;
+      font-size: 11px; font-weight: 500; padding: 6px 12px;
+      border-radius: 100px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .sort-btn.active { background: rgba(79,158,255,0.12); border-color: var(--accent); color: var(--accent); }
+    .sort-arrow { font-size: 10px; opacity: 0.6; }
+
+    /* Admin unlock */
+    .admin-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-muted); font-size: 11px; padding: 6px 12px;
+      border-radius: 100px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .admin-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+    .admin-btn.unlocked { border-color: var(--yellow); color: var(--yellow); background: rgba(251,191,36,0.08); }
+
+    .count-badge {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 100px; padding: 6px 16px;
+      font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted);
+      display: flex; align-items: center; white-space: nowrap;
+    }
+    .count-badge span { color: var(--green); font-weight: 700; margin-left: 4px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    /* Developer Card */
+    .dev-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      animation: fadeUp 0.4s ease both; position: relative;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .dev-card:hover { border-color: rgba(79,158,255,0.4); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .dev-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .dev-avatar {
+      width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--accent);
+      overflow: hidden; background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 0 0 3px rgba(79,158,255,0.15);
+    }
+    .dev-avatar img { width:100%;height:100%;object-fit:cover; }
+    .dev-avatar .initials { font-size:18px;font-weight:700;color:var(--accent); }
+    .dev-info { flex:1;min-width:0; }
+    .dev-name { font-size:15px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .dev-job { font-size:12px;color:var(--accent);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
+    .dev-body { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .dev-domain { font-size:13px;color:var(--text-muted);line-height:1.5; }
+    .dev-meta { display:flex;gap:6px;flex-wrap:wrap; }
+    .meta-chip {
+      background:var(--surface2);border:1px solid var(--border);border-radius:100px;
+      padding:3px 10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);
+    }
+    .meta-chip.career { color:var(--green);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08); }
+    .meta-chip.birthday { color:#f9a8d4;border-color:rgba(249,168,212,0.3);background:rgba(249,168,212,0.08); }
+    .meta-chip.age { color:var(--yellow);border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.08); }
+
+    /* Prayer section */
+    .prayer-section {
+      border-top: 1px solid var(--border);
+      padding-top: 10px; margin-top: 2px;
+    }
+    .prayer-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; }
+    .prayer-label { font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace;letter-spacing:1px; }
+    .prayer-edit-btn {
+      width:22px;height:22px;border-radius:50%;background:var(--surface2);
+      border:1px solid var(--border);color:var(--text-muted);font-size:10px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:all 0.2s; flex-shrink:0;
+    }
+    .prayer-edit-btn:hover { border-color:var(--accent2);color:var(--accent2); }
+    .prayer-text { font-size:12px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap; }
+    .prayer-text.empty { color:rgba(122,132,153,0.4);font-style:italic; }
+    .prayer-input-wrap { display:none; margin-top:6px; }
+    .prayer-input-wrap.show { display:flex;gap:6px; }
+    .prayer-input {
+      flex:1;background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:8px 10px;color:var(--text);
+      font-family:'Noto Sans KR',sans-serif;font-size:12px;outline:none;
+      transition:border-color 0.2s; resize:none; min-height:60px;
+    }
+    .prayer-input:focus { border-color:var(--accent2); }
+    .prayer-save-btn {
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      border:none;color:white;font-size:11px;font-weight:700;
+      padding:0 12px;border-radius:8px;cursor:pointer;
+      font-family:'Noto Sans KR',sans-serif; align-self:flex-end; height:34px;
+      transition:opacity 0.2s; white-space:nowrap;
+    }
+    .prayer-save-btn:hover { opacity:0.85; }
+
+    /* Edit btn */
+    .btn-edit {
+      position:absolute;top:14px;right:14px;width:26px;height:26px;
+      border-radius:50%;background:var(--surface2);border:1px solid var(--border);
+      color:var(--text-muted);font-size:11px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      text-decoration:none;transition:all 0.2s;opacity:0;
+    }
+    .dev-card:hover .btn-edit { opacity:1; }
+    .btn-edit:hover { border-color:var(--accent);color:var(--accent); }
+
+    /* Admin modal */
+    .modal-overlay {
+      position:fixed;inset:0;background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(4px);z-index:999;
+      display:none;align-items:center;justify-content:center;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal-card {
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:20px;padding:32px;width:300px;max-width:90vw;
+      animation:slideUp 0.3s ease;text-align:center;
+    }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+    .modal-title { font-size:16px;font-weight:700;margin-bottom:8px; }
+    .modal-desc { font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.6; }
+    .modal-input {
+      width:100%;background:var(--surface2);border:1px solid var(--border);
+      border-radius:10px;padding:12px 16px;color:var(--text);
+      font-family:'Space Mono',monospace;font-size:16px;text-align:center;
+      outline:none;letter-spacing:4px;transition:border-color 0.2s;margin-bottom:14px;
+    }
+    .modal-input:focus { border-color:var(--yellow); }
+    .modal-btns { display:flex;gap:8px; }
+    .modal-cancel {
+      flex:1;background:var(--surface2);border:1px solid var(--border);
+      color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;
+      font-size:13px;padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s;
+    }
+    .modal-cancel:hover { border-color:var(--border);color:var(--text); }
+    .modal-confirm {
+      flex:1;background:linear-gradient(135deg,var(--yellow),#f59e0b);
+      border:none;color:#000;font-family:'Noto Sans KR',sans-serif;
+      font-size:13px;font-weight:700;padding:10px;border-radius:10px;cursor:pointer;transition:opacity 0.2s;
+    }
+    .modal-confirm:hover { opacity:0.85; }
+    .modal-error { font-size:12px;color:#f87171;margin-top:-8px;margin-bottom:10px; }
+
+    .loading-state { text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px;grid-column:1/-1; }
+    .loading-spinner { width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+    .empty-state { text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px;grid-column:1/-1; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-dot"></div>
+    <h1>만나교회 <span>개발자 지도</span></h1>
+  </div>
+  <div class="header-right">
+    <a href="index.html" class="nav-btn">🗺️ 지도 보기</a>
+    <a href="list.html" class="nav-btn active">📋 목록 보기</a>
+    <a href="survey.html" class="btn-register">+ 등록하기</a>
+  </div>
+</div>
+
+<div class="content">
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="이름, 직업, 도메인으로 검색..." oninput="applyFilters()">
+    </div>
+    <div class="sort-group">
+      <button class="sort-btn active" id="sort-name" onclick="setSort('name')">가나다순 <span class="sort-arrow">↑</span></button>
+      <button class="sort-btn" id="sort-career" onclick="setSort('career')">경력순 <span class="sort-arrow"></span></button>
+      <button class="sort-btn" id="sort-age" onclick="setSort('age')">나이순 <span class="sort-arrow"></span></button>
+      <button class="sort-btn" id="sort-birthday" onclick="setSort('birthday')">생일순 <span class="sort-arrow"></span></button>
+    </div>
+    <button class="admin-btn" id="adminBtn" onclick="openAdminModal()">🔒 관리자</button>
+    <div class="count-badge">총 <span id="devCount">0</span>명</div>
+  </div>
+
+  <div id="grid" class="grid">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      개발자 목록을 불러오는 중...
+    </div>
+  </div>
+</div>
+
+<!-- Admin password modal -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-card">
+    <div class="modal-title">🔐 관리자 인증</div>
+    <div class="modal-desc">비밀번호를 입력하면<br>나이 정보를 볼 수 있어요.</div>
+    <input type="password" class="modal-input" id="adminPwInput" placeholder="••••" maxlength="10"
+      onkeydown="if(event.key==='Enter') confirmAdmin()">
+    <div class="modal-error" id="adminError" style="display:none;">비밀번호가 틀렸어요.</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeAdminModal()">취소</button>
+      <button class="modal-confirm" onclick="confirmAdmin()">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwotkKwTMoxUkKWNgg6mVRnQrb2tXRMS_qFAcoBjcMCaMmPPO6KvdmxgffH72UaIZitFg/exec';
+  const ADMIN_PW = '7009';
+
+  let allDevelopers = [];
+  let currentSort = 'name';
+  let sortAsc = true;
+  let isAdminUnlocked = false;
+
+  function getInitials(name) { return name ? name.charAt(0) : '?'; }
+
+  function calcAge(birthdate) {
+    if (!birthdate) return null;
+    const birth = new Date(birthdate);
+    if (isNaN(birth)) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  }
+
+  function formatBirthday(birthdate) {
+    if (!birthdate) return null;
+    const d = new Date(birthdate);
+    if (isNaN(d)) return null;
+    return `${d.getMonth()+1}월 ${d.getDate()}일`;
+  }
+
+  function setSort(type) {
+    if (currentSort === type) {
+      sortAsc = !sortAsc; // 같은 버튼 누르면 방향 토글
+    } else {
+      currentSort = type;
+      sortAsc = true;
+    }
+    // 모든 버튼 초기화
+    document.querySelectorAll('.sort-btn').forEach(b => {
+      b.classList.remove('active');
+      const arrow = b.querySelector('.sort-arrow');
+      if (arrow) arrow.textContent = '';
+    });
+    // 활성 버튼 표시
+    const activeBtn = document.getElementById('sort-' + type);
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+      const arrow = activeBtn.querySelector('.sort-arrow');
+      if (arrow) arrow.textContent = sortAsc ? '↑' : '↓';
+    }
+    applyFilters();
+  }
+
+  function sortDevelopers(devs) {
+    const dir = sortAsc ? 1 : -1;
+    return [...devs].sort((a, b) => {
+      let cmp = 0;
+      if (currentSort === 'name') {
+        cmp = (a.name || '').localeCompare(b.name || '', 'ko');
+      } else if (currentSort === 'career') {
+        cmp = (parseInt(a.career) || 0) - (parseInt(b.career) || 0);
+      } else if (currentSort === 'age') {
+        cmp = (calcAge(a.birthdate) || 0) - (calcAge(b.birthdate) || 0);
+      } else if (currentSort === 'birthday') {
+        const getMonthDay = (bd) => {
+          if (!bd) return 9999;
+          const d = new Date(bd);
+          return isNaN(d) ? 9999 : d.getMonth() * 100 + d.getDate();
+        };
+        cmp = getMonthDay(a.birthdate) - getMonthDay(b.birthdate);
+      }
+      // 값 없는 항목은 항상 뒤로
+      const aEmpty = !a[currentSort === 'name' ? 'name' : currentSort === 'career' ? 'career' : 'birthdate'];
+      const bEmpty = !b[currentSort === 'name' ? 'name' : currentSort === 'career' ? 'career' : 'birthdate'];
+      if (aEmpty && !bEmpty) return 1;
+      if (!aEmpty && bEmpty) return -1;
+      return cmp * dir;
+    });
+  }
+
+  function togglePrayerEdit(rowNum) {
+    const wrap = document.getElementById(`prayer-wrap-${rowNum}`);
+    const textEl = document.getElementById(`prayer-text-${rowNum}`);
+    if (!wrap || !textEl) return;
+    const isShowing = wrap.classList.contains('show');
+    if (isShowing) {
+      wrap.classList.remove('show');
+    } else {
+      const input = document.getElementById(`prayer-input-${rowNum}`);
+      if (input) input.value = textEl.dataset.raw || '';
+      wrap.classList.add('show');
+      if (input) input.focus();
+    }
+  }
+
+  async function savePrayer(rowNum) {
+    const input = document.getElementById(`prayer-input-${rowNum}`);
+    const textEl = document.getElementById(`prayer-text-${rowNum}`);
+    const wrap = document.getElementById(`prayer-wrap-${rowNum}`);
+    if (!input || !textEl) return;
+
+    const newPrayer = input.value.trim();
+    const btn = document.getElementById(`prayer-save-${rowNum}`);
+    btn.textContent = '저장 중...';
+    btn.disabled = true;
+
+    try {
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ row: rowNum, prayerOnly: true, prayer: newPrayer })
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+
+      textEl.dataset.raw = newPrayer;
+      textEl.textContent = newPrayer || '기도제목이 없어요.';
+      textEl.className = 'prayer-text' + (newPrayer ? '' : ' empty');
+      wrap.classList.remove('show');
+
+      // 로컬 데이터도 업데이트
+      const dev = allDevelopers.find(d => d._row == rowNum);
+      if (dev) dev.prayer = newPrayer;
+    } catch(e) {
+      alert('저장 실패: ' + e.message);
+    } finally {
+      btn.textContent = '저장';
+      btn.disabled = false;
+    }
+  }
+
+  function renderCards(devs) {
+    const grid = document.getElementById('grid');
+    document.getElementById('devCount').textContent = devs.length;
+    if (devs.length === 0) {
+      grid.innerHTML = '<div class="empty-state">검색 결과가 없어요 😢</div>';
+      return;
+    }
+
+    const sorted = sortDevelopers(devs);
+
+    grid.innerHTML = sorted.map((dev, i) => {
+      const rowNum = dev._row;
+      const avatarHtml = dev.photoUrl
+        ? `<img src="${dev.photoUrl}" alt="${dev.name}" onerror="this.parentElement.innerHTML='<span class=\\'initials\\'>${getInitials(dev.name)}</span>'">`
+        : `<span class="initials">${getInitials(dev.name)}</span>`;
+
+      const metaChips = [];
+      if (dev.career) metaChips.push(`<span class="meta-chip career">경력 ${dev.career}년</span>`);
+
+      const birthday = formatBirthday(dev.birthdate);
+      if (birthday) metaChips.push(`<span class="meta-chip birthday">🎂 ${birthday}</span>`);
+
+      if (isAdminUnlocked) {
+        const age = calcAge(dev.birthdate);
+        if (age) metaChips.push(`<span class="meta-chip age">👤 ${age}세</span>`);
+      }
+
+      const prayer = dev.prayer || '';
+      const prayerDisplay = prayer || '기도제목이 없어요.';
+      const prayerClass = prayer ? 'prayer-text' : 'prayer-text empty';
+
+      return `
+        <div class="dev-card" style="animation-delay:${Math.min(i,10) * 0.04}s">
+          <a href="survey.html?row=${rowNum}" class="btn-edit" title="기본정보 수정">✏️</a>
+          <div class="dev-card-header">
+            <div class="dev-avatar">${avatarHtml}</div>
+            <div class="dev-info">
+              <div class="dev-name">${dev.name || ''}</div>
+              <div class="dev-job">${dev.job || ''}</div>
+            </div>
+          </div>
+          <div class="dev-body">
+            ${dev.intro ? `<div class="dev-domain">${dev.intro}</div>` : ''}
+            ${metaChips.length ? `<div class="dev-meta">${metaChips.join('')}</div>` : ''}
+            <div class="prayer-section">
+              <div class="prayer-header">
+                <span class="prayer-label">🙏 기도제목</span>
+                <button class="prayer-edit-btn" onclick="togglePrayerEdit(${rowNum})" title="기도제목 수정">✏️</button>
+              </div>
+              <div class="${prayerClass}" id="prayer-text-${rowNum}" data-raw="${prayer.replace(/"/g,'&quot;')}">${prayerDisplay}</div>
+              <div class="prayer-input-wrap" id="prayer-wrap-${rowNum}">
+                <textarea class="prayer-input" id="prayer-input-${rowNum}" placeholder="기도제목을 입력하세요..."></textarea>
+                <button class="prayer-save-btn" id="prayer-save-${rowNum}" onclick="savePrayer(${rowNum})">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const filtered = q
+      ? allDevelopers.filter(d =>
+          (d.name||'').toLowerCase().includes(q) ||
+          (d.job||'').toLowerCase().includes(q) ||
+          (d.intro||'').toLowerCase().includes(q))
+      : allDevelopers;
+    renderCards(filtered);
+  }
+
+  // Admin modal
+  function openAdminModal() {
+    if (isAdminUnlocked) {
+      isAdminUnlocked = false;
+      document.getElementById('adminBtn').textContent = '🔒 관리자';
+      document.getElementById('adminBtn').classList.remove('unlocked');
+      applyFilters();
+      return;
+    }
+    document.getElementById('adminPwInput').value = '';
+    document.getElementById('adminError').style.display = 'none';
+    document.getElementById('adminModal').classList.add('show');
+    setTimeout(() => document.getElementById('adminPwInput').focus(), 100);
+  }
+
+  function closeAdminModal() {
+    document.getElementById('adminModal').classList.remove('show');
+  }
+
+  function confirmAdmin() {
+    const pw = document.getElementById('adminPwInput').value;
+    if (pw === ADMIN_PW) {
+      isAdminUnlocked = true;
+      document.getElementById('adminBtn').textContent = '🔓 관리자';
+      document.getElementById('adminBtn').classList.add('unlocked');
+      closeAdminModal();
+      applyFilters();
+    } else {
+      document.getElementById('adminError').style.display = 'block';
+      document.getElementById('adminPwInput').value = '';
+      document.getElementById('adminPwInput').focus();
+    }
+  }
+
+  document.getElementById('adminModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminModal();
+  });
+
+  async function loadDevelopers() {
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now(), { redirect: 'follow' });
+      const data = await res.json();
+      allDevelopers = data.filter(d => d.name).map((d, i) => ({ ...d, _row: i + 2 }));
+      renderCards(allDevelopers);
+    } catch(e) {
+      document.getElementById('grid').innerHTML = '<div class="empty-state">데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>';
+    }
+  }
+
+  loadDevelopers();
+</script>
+</body>
+</html>
